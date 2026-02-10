@@ -40,7 +40,7 @@ export default async function HomePage() {
           <form
             action={async () => {
               "use server";
-              await signOut();
+              await signOut({ redirectTo: "/" });
             }}
           >
             <button className="text-sm text-red-500 hover:text-red-700 font-medium transition-colors">
