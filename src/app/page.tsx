@@ -1,9 +1,40 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { BookIcon, SparklesIcon, GraduationCapIcon } from "lucide-react";
+import { auth, signIn } from "@/auth";
 
 export default async function HomePage() {
-  // Отримуємо базову статистику для мотивації
+  const session = await auth();
+
+  // 1. Екран для неавторизованого користувача
+  if (!session) {
+    return (
+      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+        <div className="text-center bg-white p-12 rounded-2xl shadow-xl max-w-md w-full">
+          <h1 className="text-3xl font-bold text-gray-900 mb-6 font-mono tracking-tight">
+            LingoFlow
+          </h1>
+          <p className="text-gray-600 mb-8">
+            Твій персональний помічник для вивчення англійської. Увійди, щоб
+            зберегти свій прогрес.
+          </p>
+          <form
+            action={async () => {
+              "use server";
+              await signIn("google");
+            }}
+          >
+            <button
+              type="submit"
+              className="w-full flex items-center justify-center gap-3 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95"
+            >
+              Увійти через Google
+            </button>
+          </form>
+        </div>
+      </main>
+    );
+  }
   const totalWords = await db.word.count();
   const learnedWords = await db.word.count({ where: { isLearned: true } });
   const toLearn = totalWords - learnedWords;

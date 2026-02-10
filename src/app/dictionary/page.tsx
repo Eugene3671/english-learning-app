@@ -1,37 +1,12 @@
 import { db } from "@/lib/db";
 
-import { auth, signIn, signOut } from "@/auth";
+import { auth, signOut } from "@/auth";
 import WordsClient from "./WordsClient";
 
 export default async function HomePage() {
   const session = await auth();
 
-  if (!session) {
-    return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
-        <div className="text-center bg-white p-12 rounded-2xl shadow-xl max-w-md w-full">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Мій Словник</h1>
-          <p className="text-gray-600 mb-8">
-            Будь ласка, увійдіть через Google, щоб почати вивчати англійські
-            слова.
-          </p>
-          <form
-            action={async () => {
-              "use server";
-              await signIn("google");
-            }}
-          >
-            <button
-              type="submit"
-              className="w-full flex items-center justify-center gap-3 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95"
-            >
-              Увійти через Google
-            </button>
-          </form>
-        </div>
-      </main>
-    );
-  }
+  if (!session) return;
   const [user, words] = await Promise.all([
     db.user.findUnique({
       where: { id: session.user.id },
