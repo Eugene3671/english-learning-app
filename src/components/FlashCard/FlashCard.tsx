@@ -19,36 +19,39 @@ export function Flashcard({
   onMarkLearned,
 }: FlashcardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
-
   const handleSpeak = (e: React.MouseEvent) => {
     e.stopPropagation();
-
-    // 1. Скидаємо чергу, щоб уникнути зависання на Mac
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(original);
+    let voices = window.speechSynthesis.getVoices();
 
-    // 2. Отримуємо список всіх голосів, доступних у вашому браузері
-    const voices = window.speechSynthesis.getVoices();
+    // Якщо список порожній (баг Safari/Chrome), пробуємо ще раз
+    if (voices.length === 0) {
+      voices = window.speechSynthesis.getVoices();
+    }
 
-    // 3. ПРЕМІУМ ПОШУК: Шукаємо найкращий англійський голос
-    // Пріоритет: Google US English -> Покращені голоси (Enhanced/Premium) -> будь-який en-US
     const bestVoice =
       voices.find((v) => v.name === "Google US English") ||
-      voices.find((v) => v.lang === "en-US" && v.name.includes("Premium")) ||
-      voices.find((v) => v.lang === "en-US" && v.name.includes("Enhanced")) ||
+      // Додаємо пошук за словом "Enhanced" для iOS
+      voices.find(
+        (v) =>
+          v.lang.startsWith("en-US") &&
+          (v.name.includes("Enhanced") || v.name.includes("Premium")),
+      ) ||
+      // Специфічний голос Alex, який найкращий на Mac/iPhone
+      voices.find((v) => v.name.includes("Alex")) ||
       voices.find((v) => v.lang === "en-US");
 
     if (bestVoice) {
       utterance.voice = bestVoice;
+      console.log("Вибрано голос:", bestVoice.name); // Перевір це в консолі на iPhone
     }
 
-    // 4. Налаштування для чіткості (важливо для підготовки до США)
     utterance.lang = "en-US";
-    utterance.rate = 0.85; // Трохи повільніше для кращого сприйняття
+    utterance.rate = 0.85;
     utterance.pitch = 1.0;
 
-    // 5. Запуск
     window.speechSynthesis.speak(utterance);
   };
 
