@@ -22,8 +22,33 @@ export function Flashcard({
 
   const handleSpeak = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // 1. Скидаємо чергу, щоб уникнути зависання на Mac
+    window.speechSynthesis.cancel();
+
     const utterance = new SpeechSynthesisUtterance(original);
+
+    // 2. Отримуємо список всіх голосів, доступних у вашому браузері
+    const voices = window.speechSynthesis.getVoices();
+
+    // 3. ПРЕМІУМ ПОШУК: Шукаємо найкращий англійський голос
+    // Пріоритет: Google US English -> Покращені голоси (Enhanced/Premium) -> будь-який en-US
+    const bestVoice =
+      voices.find((v) => v.name === "Google US English") ||
+      voices.find((v) => v.lang === "en-US" && v.name.includes("Premium")) ||
+      voices.find((v) => v.lang === "en-US" && v.name.includes("Enhanced")) ||
+      voices.find((v) => v.lang === "en-US");
+
+    if (bestVoice) {
+      utterance.voice = bestVoice;
+    }
+
+    // 4. Налаштування для чіткості (важливо для підготовки до США)
     utterance.lang = "en-US";
+    utterance.rate = 0.85; // Трохи повільніше для кращого сприйняття
+    utterance.pitch = 1.0;
+
+    // 5. Запуск
     window.speechSynthesis.speak(utterance);
   };
 
@@ -39,7 +64,7 @@ export function Flashcard({
         <div className="absolute inset-0 backface-hidden bg-white border-2 border-blue-50 rounded-3xl shadow-md flex flex-col items-center justify-center p-6">
           <button
             onClick={handleSpeak}
-            className="absolute top-4 right-4 p-2 text-blue-400 hover:text-blue-600"
+            className="absolute top-4 right-4 p-4 text-blue-400 hover:text-blue-600"
           >
             <Volume2Icon className="w-6 h-6" />
           </button>
