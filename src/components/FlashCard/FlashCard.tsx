@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircleIcon, Volume2Icon } from "lucide-react";
 
@@ -19,40 +19,20 @@ export function Flashcard({
   onMarkLearned,
 }: FlashcardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+
   const handleSpeak = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(original);
-    let voices = window.speechSynthesis.getVoices();
+    // Викликаємо твій власний API
+    const audio = new Audio(`/api/tts?text=${encodeURIComponent(original)}`);
 
-    // Якщо список порожній (баг Safari/Chrome), пробуємо ще раз
-    if (voices.length === 0) {
-      voices = window.speechSynthesis.getVoices();
-    }
-
-    const bestVoice =
-      voices.find((v) => v.name === "Google US English") ||
-      // Додаємо пошук за словом "Enhanced" для iOS
-      voices.find(
-        (v) =>
-          v.lang.startsWith("en-US") &&
-          (v.name.includes("Enhanced") || v.name.includes("Premium")),
-      ) ||
-      // Специфічний голос Alex, який найкращий на Mac/iPhone
-      voices.find((v) => v.name.includes("Alex")) ||
-      voices.find((v) => v.lang === "en-US");
-
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-      console.log("Вибрано голос:", bestVoice.name); // Перевір це в консолі на iPhone
-    }
-
-    utterance.lang = "en-US";
-    utterance.rate = 0.85;
-    utterance.pitch = 1.0;
-
-    window.speechSynthesis.speak(utterance);
+    audio.play().catch((err) => {
+      console.error("Помилка відтворення через Proxy:", err);
+      // Фолбек на стандартний синтезатор, якщо проксі не спрацював
+      const utterance = new SpeechSynthesisUtterance(original);
+      utterance.lang = "en-US";
+      window.speechSynthesis.speak(utterance);
+    });
   };
 
   return (
