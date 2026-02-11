@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
   return new Response(response.body, {
     headers: {
       "Content-Type": "audio/mpeg",
+      "Cache-Control": "public, s-maxage=31536000, stale-while-revalidate=59", // Кешуємо на рік
     },
   });
 }
