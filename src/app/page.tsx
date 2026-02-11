@@ -35,7 +35,11 @@ export default async function HomePage() {
       </main>
     );
   }
-  const totalWords = await db.word.count();
+  const totalWords = await db.word.count({
+    where: {
+      userId: session.user.id,
+    },
+  });
   const learnedWords = await db.word.count({ where: { isLearned: true } });
   const toLearn = totalWords - learnedWords;
 

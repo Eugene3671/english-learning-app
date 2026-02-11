@@ -19,22 +19,44 @@ export function Flashcard({
   onMarkLearned,
 }: FlashcardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
-  const handleSpeak = (e: React.MouseEvent) => {
+  const handleSpeak = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    // Викликаємо твій власний API
+    // Якщо вже розмовляє — нічого не робимо
+    if (isSpeaking) return;
+
+    setIsSpeaking(true);
+
     const audio = new Audio(`/api/tts?text=${encodeURIComponent(original)}`);
 
-    audio.play().catch((err) => {
+    // Використовуємо подію onended, щоб дізнатися, коли звук скінчився
+    audio.onended = () => {
+      setIsSpeaking(false);
+    };
+
+    // Також обробляємо помилки, щоб кнопка не "зависла" в стані true
+    audio.onerror = () => {
+      setIsSpeaking(false);
+    };
+
+    try {
+      await audio.play();
+    } catch (err) {
       console.error("Помилка відтворення через Proxy:", err);
-      // Фолбек на стандартний синтезатор, якщо проксі не спрацював
+
+      // Фолбек на стандартний синтезатор
       const utterance = new SpeechSynthesisUtterance(original);
       utterance.lang = "en-US";
-      window.speechSynthesis.speak(utterance);
-    });
-  };
 
+      // Для speechSynthesis теж додаємо обробник завершення
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+
+      window.speechSynthesis.speak(utterance);
+    }
+  };
   return (
     <div className="relative w-full h-64 perspective-1000">
       <motion.div
